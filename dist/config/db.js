@@ -10,7 +10,7 @@ const pool = promise_1.default.createPool({
     user: 'root', // update with your db user
     password: '', // update with your db password
     database: 'test_db', // update with your db name
-    waitForConnections: true,
+    waitForConnections: false,
     connectionLimit: 10,
     queueLimit: 0
 });
