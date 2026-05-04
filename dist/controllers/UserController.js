@@ -1,82 +1,77 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.UserController = void 0;
-// 6. import/export module
-const User_1 = require("../models/User");
-class UserController {
-    // Get all users controller logic
-    static async getAllUsers(req, res) {
-        // 8. try/catch
-        try {
-            const users = await User_1.User.findAll();
-            res.status(200).json(users);
-        }
-        catch (error) {
-            res.status(500).json({ message: 'Error retrieving users', error });
-        }
-    }
-    // Get user by ID controller logic
-    static async getUserById(req, res) {
-        try {
-            // 5. destructuring object
-            const { id } = req.params;
-            const user = await User_1.User.findById(Number(id));
-            if (!user) {
-                res.status(404).json({ message: 'User not found' });
-                return;
+const baseController_1 = require("./baseController");
+const User_1 = require("../services/User");
+class UserController extends baseController_1.BaseController {
+    constructor() {
+        super();
+        // Get all users controller logic
+        this.getAllUsers = async (req, res) => {
+            // 8. try/catch
+            try {
+                const users = await this.userService.getAllUsers();
+                this.success(res, users);
             }
-            res.status(200).json(user);
-        }
-        catch (error) {
-            res.status(500).json({ message: 'Error retrieving user', error });
-        }
-    }
-    // 4. create method in controller
-    static async createUser(req, res) {
-        try {
-            // 5. destructuring object
-            const { name, email } = req.body;
-            if (!name || !email) {
-                res.status(400).json({ message: 'Name and email are required' });
-                return;
+            catch (error) {
+                this.handleError(res, error, 'Error retrieving users');
             }
-            const newUserId = await User_1.User.create({ name, email });
-            res.status(201).json({ id: newUserId, name, email });
-        }
-        catch (error) {
-            res.status(500).json({ message: 'Error creating user', error });
-        }
-    }
-    // Update user controller logic
-    static async updateUser(req, res) {
-        try {
-            const { id } = req.params;
-            const { name, email } = req.body;
-            const success = await User_1.User.update(Number(id), { name, email });
-            if (!success) {
-                res.status(404).json({ message: 'User not found or no changes made' });
-                return;
+        };
+        // Get user by ID controller logic
+        this.getUserById = async (req, res) => {
+            try {
+                // 5. destructuring object
+                const { id } = req.params;
+                const user = await this.userService.getUserById(Number(id));
+                this.success(res, user);
             }
-            res.status(200).json({ message: 'User updated successfully' });
-        }
-        catch (error) {
-            res.status(500).json({ message: 'Error updating user', error });
-        }
-    }
-    // Delete user controller logic
-    static async deleteUser(req, res) {
-        try {
-            const { id } = req.params;
-            const success = await User_1.User.delete(Number(id));
-            if (!success) {
-                res.status(404).json({ message: 'User not found' });
-                return;
+            catch (error) {
+                this.handleError(res, error, 'Error retrieving user');
             }
-            res.status(200).json({ message: 'User deleted successfully' });
+        };
+        // 4. create method in controller
+        this.createUser = async (req, res) => {
+            try {
+                // 5. destructuring object
+                const { name, email } = req.body;
+                const user = await this.userService.createUser({ name, email });
+                this.success(res, user, 201);
+            }
+            catch (error) {
+                this.handleError(res, error, 'Error creating user');
+            }
+        };
+        // Update user controller logic
+        this.updateUser = async (req, res) => {
+            try {
+                const { id } = req.params;
+                const { name, email } = req.body;
+                await this.userService.updateUser(Number(id), { name, email });
+                this.success(res, { message: 'User updated successfully' });
+            }
+            catch (error) {
+                this.handleError(res, error, 'Error updating user');
+            }
+        };
+        // Delete user controller logic
+        this.deleteUser = async (req, res) => {
+            try {
+                const { id } = req.params;
+                await this.userService.deleteUser(Number(id));
+                this.success(res, { message: 'User deleted successfully' });
+            }
+            catch (error) {
+                this.handleError(res, error, 'Error deleting user');
+            }
+        };
+        this.userService = new User_1.UserService();
+    }
+    handleError(res, error, fallbackMessage) {
+        if (error instanceof User_1.ServiceError) {
+            this.error(res, error.message, error.statusCode);
+            return;
         }
-        catch (error) {
-            res.status(500).json({ message: 'Error deleting user', error });
-        }
+        this.error(res, fallbackMessage, 500, error);
     }
 }
 exports.UserController = UserController;

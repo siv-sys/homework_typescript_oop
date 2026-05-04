@@ -3,13 +3,14 @@ import { Router } from 'express';
 import { UserController } from '../controllers/UserController';
 
 const router = Router();
+const userController = new UserController();
 
 // Define CRUD routes utilizing the controller methods
-router.get('/', UserController.getAllUsers);
-router.get('/:id', UserController.getUserById);
+router.get('/', userController.getAllUsers);
+router.get('/:id', userController.getUserById);
 // Route using the requested 'create method in controller'
-router.post('/', UserController.createUser);
-router.put('/:id', UserController.updateUser);
-router.delete('/:id', UserController.deleteUser);
+router.post('/', userController.createUser);
+router.put('/:id', userController.updateUser);
+router.delete('/:id', userController.deleteUser);
 
 export default router;

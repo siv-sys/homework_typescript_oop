@@ -52,7 +52,8 @@ class User {
             return false;
         }
         values.push(id);
-        const [result] = await db_1.default.execute(`UPDATE users SET ${updates.join(', ')} WHERE id = ?`, values);
+        const sql = `UPDATE users SET ${updates.join(', ')} WHERE id = ?`;
+        const [result] = await db_1.default.execute(sql, values);
         return result.affectedRows > 0;
     }
     // Static method to delete a user

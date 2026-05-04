@@ -75,10 +75,8 @@ export class User {
 
     values.push(id);
 
-    const [result] = await pool.execute<ResultSetHeader>(
-      `UPDATE users SET ${updates.join(', ')} WHERE id = ?`,
-      values
-    );
+    const sql = `UPDATE users SET ${updates.join(', ')} WHERE id = ?`;
+    const [result] = await pool.execute<ResultSetHeader>(sql, values);
     return result.affectedRows > 0;
   }
 

@@ -1,89 +1,79 @@
 import { Request, Response } from 'express';
-// 6. import/export module
-import { User } from '../models/User';
+import { BaseController } from './baseController';
+import { ServiceError, UserService } from '../services/User';
 
-export class UserController {
-  
+export class UserController extends BaseController {
+  private userService: UserService;
+
+  constructor() {
+    super();
+    this.userService = new UserService();
+  }
+
   // Get all users controller logic
-  public static async getAllUsers(req: Request, res: Response): Promise<void> {
+  public getAllUsers = async (req: Request, res: Response): Promise<void> => {
     // 8. try/catch
     try {
-      const users = await User.findAll();
-      res.status(200).json(users);
+      const users = await this.userService.getAllUsers();
+      this.success(res, users);
     } catch (error) {
-      res.status(500).json({ message: 'Error retrieving users', error });
+      this.handleError(res, error, 'Error retrieving users');
     }
-  }
+  };
 
   // Get user by ID controller logic
-  public static async getUserById(req: Request, res: Response): Promise<void> {
+  public getUserById = async (req: Request, res: Response): Promise<void> => {
     try {
       // 5. destructuring object
       const { id } = req.params;
-      const user = await User.findById(Number(id));
-      
-      if (!user) {
-        res.status(404).json({ message: 'User not found' });
-        return;
-      }
-      
-      res.status(200).json(user);
+      const user = await this.userService.getUserById(Number(id));
+      this.success(res, user);
     } catch (error) {
-      res.status(500).json({ message: 'Error retrieving user', error });
+      this.handleError(res, error, 'Error retrieving user');
     }
-  }
+  };
 
   // 4. create method in controller
-  public static async createUser(req: Request, res: Response): Promise<void> {
+  public createUser = async (req: Request, res: Response): Promise<void> => {
     try {
       // 5. destructuring object
       const { name, email } = req.body;
-      
-      if (!name || !email) {
-        res.status(400).json({ message: 'Name and email are required' });
-        return;
-      }
-      
-      const newUserId = await User.create({ name, email });
-      res.status(201).json({ id: newUserId, name, email });
+      const user = await this.userService.createUser({ name, email });
+      this.success(res, user, 201);
     } catch (error) {
-      res.status(500).json({ message: 'Error creating user', error });
+      this.handleError(res, error, 'Error creating user');
     }
-  }
+  };
 
   // Update user controller logic
-  public static async updateUser(req: Request, res: Response): Promise<void> {
+  public updateUser = async (req: Request, res: Response): Promise<void> => {
     try {
       const { id } = req.params;
       const { name, email } = req.body;
-      
-      const success = await User.update(Number(id), { name, email });
-      
-      if (!success) {
-        res.status(404).json({ message: 'User not found or no changes made' });
-        return;
-      }
-      
-      res.status(200).json({ message: 'User updated successfully' });
+      await this.userService.updateUser(Number(id), { name, email });
+      this.success(res, { message: 'User updated successfully' });
     } catch (error) {
-      res.status(500).json({ message: 'Error updating user', error });
+      this.handleError(res, error, 'Error updating user');
     }
-  }
+  };
 
   // Delete user controller logic
-  public static async deleteUser(req: Request, res: Response): Promise<void> {
+  public deleteUser = async (req: Request, res: Response): Promise<void> => {
     try {
       const { id } = req.params;
-      const success = await User.delete(Number(id));
-      
-      if (!success) {
-        res.status(404).json({ message: 'User not found' });
-        return;
-      }
-      
-      res.status(200).json({ message: 'User deleted successfully' });
+      await this.userService.deleteUser(Number(id));
+      this.success(res, { message: 'User deleted successfully' });
     } catch (error) {
-      res.status(500).json({ message: 'Error deleting user', error });
+      this.handleError(res, error, 'Error deleting user');
     }
+  };
+
+  private handleError(res: Response, error: unknown, fallbackMessage: string): void {
+    if (error instanceof ServiceError) {
+      this.error(res, error.message, error.statusCode);
+      return;
+    }
+
+    this.error(res, fallbackMessage, 500, error);
   }
 }
